@@ -2,8 +2,6 @@ name: FFMPEG RTMP Streaming
 
 on:
   workflow_dispatch:  # Memungkinkan menjalankan workflow secara manual
-  schedule:
-    - cron: '0 * * * *'  # Jalankan setiap jam (opsional)
 
 jobs:
   stream:
