@@ -1,35 +1,29 @@
-name: Run FFmpeg Streaming
+name: FFMPEG RTMP Streaming
 
 on:
-  workflow_dispatch: # Workflow ini dapat dijalankan secara manual melalui GitHub Actions UI.
+  workflow_dispatch:  # Memungkinkan menjalankan workflow secara manual
+  schedule:
+    - cron: '0 * * * *'  # Jalankan setiap jam (opsional)
 
 jobs:
-  ffmpeg-job:
-    runs-on: ubuntu-latest # Menggunakan runner Ubuntu
+  stream:
+    runs-on: ubuntu-latest
 
     steps:
-    # 1. Checkout Repository
-    - name: Checkout Repository
-      uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-    # 2. Install FFmpeg
-    - name: Install FFmpeg
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y ffmpeg
+      - name: Set up FFMPEG
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
 
-    # 3. Install Fonts (Arial)
-    - name: Install Arial Fonts
-      run: |
-        sudo apt-get install -y ttf-mscorefonts-installer
-        sudo fc-cache -f -v
-
-    # 4. Run FFmpeg Command
-    - name: Run FFmpeg
-      env:
-        INPUT_URL: ${{ secrets.INPUT_URL }}
-        RTMP_URL: ${{ secrets.RTMP_URL }}
-      run: |
-        ffmpeg -re -i "$INPUT_URL" \
-        -filter_complex "drawtext=text='TipiStream':fontfile='/usr/share/fonts/truetype/msttcorefonts/arial.ttf':fontsize=24:fontcolor=white:x=w-tw-40:y=40" \
-        -c:v libx264 -preset veryfast -c:a aac -b:a 128k -f flv "$RTMP_URL"
+      - name: Start Streaming with FFMPEG
+        env:
+          INPUT_URL: ${{ secrets.INPUT_URL }}
+          RTMP_URL: ${{ secrets.RTMP_URL }}
+          REFERER_HEADER: ${{ secrets.REFERER_HEADER }}
+          USER_AGENT: ${{ secrets.USER_AGENT }}
+        run: |
+          ffmpeg -headers "Referer: $REFERER_HEADER\r\nUser-Agent: $USER_AGENT" \
+          -re -i "$INPUT_URL" \
+          -c:v copy -c:a aac -b:a 128k \
+          -f flv "$RTMP_URL"
