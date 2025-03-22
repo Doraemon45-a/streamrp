@@ -1,0 +1,35 @@
+name: Run FFmpeg Streaming
+
+on:
+  workflow_dispatch: # Workflow ini dapat dijalankan secara manual melalui GitHub Actions UI.
+
+jobs:
+  ffmpeg-job:
+    runs-on: ubuntu-latest # Menggunakan runner Ubuntu
+
+    steps:
+    # 1. Checkout Repository
+    - name: Checkout Repository
+      uses: actions/checkout@v3
+
+    # 2. Install FFmpeg
+    - name: Install FFmpeg
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y ffmpeg
+
+    # 3. Install Fonts (Arial)
+    - name: Install Arial Fonts
+      run: |
+        sudo apt-get install -y ttf-mscorefonts-installer
+        sudo fc-cache -f -v
+
+    # 4. Run FFmpeg Command
+    - name: Run FFmpeg
+      env:
+        INPUT_URL: ${{ secrets.INPUT_URL }}
+        RTMP_URL: ${{ secrets.RTMP_URL }}
+      run: |
+        ffmpeg -re -i "$INPUT_URL" \
+        -filter_complex "drawtext=text='TipiStream':fontfile='/usr/share/fonts/truetype/msttcorefonts/arial.ttf':fontsize=24:fontcolor=white:x=w-tw-40:y=40" \
+        -c:v libx264 -preset veryfast -c:a aac -b:a 128k -f flv "$RTMP_URL"
